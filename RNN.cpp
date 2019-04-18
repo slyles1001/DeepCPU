@@ -3,9 +3,10 @@
 // https://gist.github.com/karpathy/d4dee566867f8291f086
 
 
-#include<RNN.h>
-#include<iostream>
-#include<cstddef>
+#include "RNN.h"
+#include <iostream>
+#include <cstddef>
+#include <sleef.h>
 
 void sigmoid(double M[], double tgt[]);
 void tanh(double M[], double tgt[]);
@@ -55,14 +56,72 @@ int main(){
 
     sigmoid(WUf, ft); sigmoid(WUi, it); sigmoid(WUo, ot); tanh(WUC, Ctildet);
 
+
+    /*
+    n, p = 0, 0
+    mWxh, mWhh, mWhy = np.zeros_like(Wxh), np.zeros_like(Whh), np.zeros_like(Why)
+    mbh, mby = np.zeros_like(bh), np.zeros_like(by) // memory variables for Adagrad
+    smooth_loss = -np.log(1.0/vocab_size)*seq_length // loss at iteration 0
+    while True:
+      // prepare inputs (we're sweeping from left to right in steps seq_length long)
+      if p+seq_length+1 >= len(data) or n == 0: 
+        hprev = np.zeros((hidden_size,1)) // reset RNN memory
+        p = 0 // go from start of data
+      inputs = [char_to_ix[ch] for ch in data[p:p+seq_length]]
+      targets = [char_to_ix[ch] for ch in data[p+1:p+seq_length+1]]
+
+      // sample from the model now and then
+      if n % 100 == 0:
+        sample_ix = sample(hprev, inputs[0], 200)
+        txt = ''.join(ix_to_char[ix] for ix in sample_ix)
+        print '----\n %s \n----' % (txt, )
+
+      // forward seq_length characters through the net and fetch gradient
+      loss, dWxh, dWhh, dWhy, dbh, dby, hprev = lossFun(inputs, targets, hprev)
+      smooth_loss = smooth_loss * 0.999 + loss * 0.001
+      if n % 100 == 0: print 'iter %d, loss: %f' % (n, smooth_loss) // print progress
+      
+      // perform parameter update with Adagrad
+      for param, dparam, mem in zip([Wxh, Whh, Why, bh, by], 
+                                    [dWxh, dWhh, dWhy, dbh, dby], 
+                                    [mWxh, mWhh, mWhy, mbh, mby]):
+        mem += dparam * dparam
+        param += -learning_rate * dparam / np.sqrt(mem + 1e-8) // adagrad update
+
+      p += seq_length // move data pointer
+    n += 1 // iteration counter 
+    */
+
+
 }
 
-void sigmoid(double M[], double tgt[]){
+void dsigmoid(double M[], double tgt[]){
+  /* M is the matrix on which to apply the sigmoid function
+  tgt is the output matrix - can it be in place?
+  double precision version */
 
 }
 
-void tanh(double M[], double tgt[]){
+void fsigmoid(float M[], double tgt[]){
+  /* M is the matrix on which to apply the sigmoid function
+  tgt is the output matrix - can it be in place?
+  single precision version */
 
+  //
+}
+
+void dtanh(double M[], double tgt[]){
+  /* M is the matrix on which to apply the tanh function
+  tgt is the output matrix - can it be in place?
+  double precision version */
+  //__m512d Sleef_tanhd8_u10avx512f(__m512d a);
+}
+
+void ftanh(float M[], float tgt[]){
+  /* M is the matrix on which to apply the tanh function
+  tgt is the output matrix - can it be in place?
+  single precision version */
+  //__m512d Sleef_tanhf16_u10avx512f(__m512d a);
 }
 
 void rand_fill(double M[]){
@@ -125,60 +184,3 @@ double sample(double *h, char seed_ix, int n){
   return ixes*/
 }
 
-int main(){
-/*
-n, p = 0, 0
-mWxh, mWhh, mWhy = np.zeros_like(Wxh), np.zeros_like(Whh), np.zeros_like(Why)
-mbh, mby = np.zeros_like(bh), np.zeros_like(by) // memory variables for Adagrad
-smooth_loss = -np.log(1.0/vocab_size)*seq_length // loss at iteration 0
-while True:
-  // prepare inputs (we're sweeping from left to right in steps seq_length long)
-  if p+seq_length+1 >= len(data) or n == 0: 
-    hprev = np.zeros((hidden_size,1)) // reset RNN memory
-    p = 0 // go from start of data
-  inputs = [char_to_ix[ch] for ch in data[p:p+seq_length]]
-  targets = [char_to_ix[ch] for ch in data[p+1:p+seq_length+1]]
-
-  // sample from the model now and then
-  if n % 100 == 0:
-    sample_ix = sample(hprev, inputs[0], 200)
-    txt = ''.join(ix_to_char[ix] for ix in sample_ix)
-    print '----\n %s \n----' % (txt, )
-
-  // forward seq_length characters through the net and fetch gradient
-  loss, dWxh, dWhh, dWhy, dbh, dby, hprev = lossFun(inputs, targets, hprev)
-  smooth_loss = smooth_loss * 0.999 + loss * 0.001
-  if n % 100 == 0: print 'iter %d, loss: %f' % (n, smooth_loss) // print progress
-  
-  // perform parameter update with Adagrad
-  for param, dparam, mem in zip([Wxh, Whh, Why, bh, by], 
-                                [dWxh, dWhh, dWhy, dbh, dby], 
-                                [mWxh, mWhh, mWhy, mbh, mby]):
-    mem += dparam * dparam
-    param += -learning_rate * dparam / np.sqrt(mem + 1e-8) // adagrad update
-
-  p += seq_length // move data pointer
-n += 1 // iteration counter 
-*/
-
-
-}
-
-void THFloatVector_sigmoid_AVX2(float *y, const float *x, const ptrdiff_t n) {
-    // https://github.com/vedanuj/pytorch/blob/ee7d1c0cae3b8dea596d23415316043a0caa44d9/aten/src/TH/vector/AVX2.cpp
-  ptrdiff_t i;
-  const __m256 one = _mm256_set1_ps(1.0f);
-  const __m256 minus_one = _mm256_set1_ps(-1.0f);
-  __m256 YMM0, YMM1, YMM2, YMM3;
-  for (i = 0; i <= ((n)-16); i += 16) {
-    YMM0 = _mm256_loadu_ps(x + i);
-    YMM1 = _mm256_loadu_ps(x + i + 8);
-    YMM0 = _mm256_mul_ps(minus_one, YMM0);
-    YMM1 = _mm256_mul_ps(minus_one, YMM1);
-    YMM2 = _mm256_add_ps(one, exp256_ps(YMM0));
-    YMM3 = _mm256_add_ps(one, exp256_ps(YMM1));
-    YMM2 = _mm256_div_ps(one, YMM2);
-    YMM3 = _mm256_div_ps(one, YMM3);
-    _mm256_storeu_ps(y + i, YMM2);
-    _mm256_storeu_ps(y + i + 8, YMM3);
-}
