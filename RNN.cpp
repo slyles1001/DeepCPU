@@ -3,24 +3,23 @@
 // https://gist.github.com/karpathy/d4dee566867f8291f086
 
 
+
+
+
+// g++ -o mycode mycode.cpp -L/path/to/install/dir -lcnpy -lz --std=c++11
+// https://github.com/rogersce/cnpy
+
 #include "RNN.h"
 #include <iostream>
 #include <cstddef>
 #include <sleef.h>
+#include "cnpy.h"
+#include "activation.h"
+#include <vector>
 
-void sigmoid(double M[], double tgt[]);
-void tanh(double M[], double tgt[]);
 void rand_fill(double M[]);
 
 using namespace std;
-
-/*data = open('input.txt', 'r').read() # should be simple plain text file
-chars = list(set(data))
-data_size, vocab_size = len(data), len(chars)
-print 'data has %d characters, %d unique.' % (data_size, vocab_size)
-char_to_ix = { ch:i for i,ch in enumerate(chars) }
-ix_to_char = { i:ch for i,ch in enumerate(chars) }
-*/
 
 // hyperparameters
 #define hidden_size 100 // size of hidden layer of neurons
@@ -32,29 +31,47 @@ ix_to_char = { i:ch for i,ch in enumerate(chars) }
 
 // model parameters
 int main(){
+    /*
     // weights for training (?)
     double WUf[data_size * vocab_size]; // forget weights
     double WUi[data_size * vocab_size]; // input weights
     double WUC[data_size * vocab_size]; // candidate weights
     double WUo[data_size * vocab_size]; // output weights
-
+    */
     // for serving we need to fuse Wf, Wi, WC, Wu because those are getting more reuse
     // 
-
-
+    //cnpy::NpyArray train = cnpy::npz_load("/home/seth/Documents/compilers/project/pys/tinyquickdraw/sketches/potato.npz", "test");
+    cnpy::npz_t potato = cnpy::npz_load("/home/seth/Documents/compilers/project/pys/tinyquickdraw/sketches/potato.npz");
+    cnpy::NpyArray train = potato["train"];
+    cout << "this far" <<endl;
+    short** train_a[70000] = {train.data<short*>()};
+    cout << "is it here" << endl;
+    //short** x = train_a->at(0);
+    cout << "is it there" << endl;
+    //cout << train_a[0][0][0] << endl;
+    //cout << train.data[0] << endl;
+    double * tanhtest = (double *) malloc(sizeof(double) * 8);
+    double * dummy;
+    for(int i=-3;i<5;i++){
+      tanhtest[i+3] = i;
+    }
+    dtanh(tanhtest, dummy, 8);
+    for(int i=0; i< 8; i++)
+      cout<< tanhtest[i] << endl;
+    //for(int i=0; i < 10; i++) for(int j=0; j<10; j++) cout << train_a[i][j] << endl;
     /*double Wf[][], Wi[][], WC[][], Wo[][], Uf[][], Ui[][] UC[][], Uo[][]; */
     /*// might not need these/put them in wu matrices
     double bf[] = {0}; // hidden bias
     double bi[] = {0}; // output bias
     double bC[] = {0};
     double bo[] = {0};*/
-
+    /*
     double it[data_size * vocab_size], 
         ot[data_size * vocab_size], 
         ft[data_size * vocab_size],
         Ctildet[data_size * vocab_size];
-
-    sigmoid(WUf, ft); sigmoid(WUi, it); sigmoid(WUo, ot); tanh(WUC, Ctildet);
+    */
+    //sigmoid(WUf, ft); sigmoid(WUi, it); sigmoid(WUo, ot); tanh(WUC, Ctildet);
 
 
     /*
@@ -95,37 +112,9 @@ int main(){
 
 }
 
-void dsigmoid(double M[], double tgt[]){
-  /* M is the matrix on which to apply the sigmoid function
-  tgt is the output matrix - can it be in place?
-  double precision version */
-
-}
-
-void fsigmoid(float M[], double tgt[]){
-  /* M is the matrix on which to apply the sigmoid function
-  tgt is the output matrix - can it be in place?
-  single precision version */
-
-  //
-}
-
-void dtanh(double M[], double tgt[]){
-  /* M is the matrix on which to apply the tanh function
-  tgt is the output matrix - can it be in place?
-  double precision version */
-  //__m512d Sleef_tanhd8_u10avx512f(__m512d a);
-}
-
-void ftanh(float M[], float tgt[]){
-  /* M is the matrix on which to apply the tanh function
-  tgt is the output matrix - can it be in place?
-  single precision version */
-  //__m512d Sleef_tanhf16_u10avx512f(__m512d a);
-}
 
 void rand_fill(double M[]){
-
+  //nothing yet
 }
 
 void loss(int *inputs, int *targets, double *hprev){
